@@ -1,0 +1,79 @@
+.controlsOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 100;
+  pointer-events: none; /* Allow clicks to pass through to the video underneath */
+}
+
+/* Ensure UI elements inside the overlay receive pointer events */
+.controlsOverlay > div[data-ui-element="true"] {
+  pointer-events: auto;
+}
+
+/* Make sure the overlay adapts to the video size */
+.controlsOverlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--video-width, 100%);
+  height: var(--video-height, 100vh);
+  pointer-events: none;
+}
+
+/* Direct styling for elements - must attach to local class */
+.controlsOverlay :global(.snapButtonContainer) {
+  position: fixed !important;
+  bottom: 120px !important;
+  right: 20px !important;
+  z-index: 110 !important;
+  pointer-events: auto !important;
+}
+
+.controlsOverlay :global(.chatButtonContainer) {
+  position: fixed !important;
+  bottom: 120px !important;
+  right: 110px !important;
+  z-index: 110 !important;
+  pointer-events: auto !important;
+}
+
+.controlsOverlay :global(.muteButton) {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 110 !important;
+  pointer-events: auto !important;
+}
+
+.controlsOverlay :global(.profilePopup) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: var(--video-width, 100%) !important;
+  max-width: 100% !important;
+  z-index: 110 !important;
+  pointer-events: auto !important;
+}
+
+.controlsOverlay :global(.chatOverlay) {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: var(--video-width, 100%) !important;
+  z-index: 110 !important;
+  pointer-events: auto !important;
+}
+
+/* Fix for undo button positioning */
+.controlsOverlay :global(.undoButton) {
+  position: absolute !important;
+  z-index: 110 !important;
+  pointer-events: auto !important;
+} 

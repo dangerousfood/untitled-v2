@@ -1,0 +1,19 @@
+{
+  "name": "rtmp-stream-platform",
+  "version": "1.0.0",
+  "description": "TikTok-style RTMP streaming platform",
+  "scripts": {
+    "player:dev": "cd player-app && NEXT_PUBLIC_RTMP_HOST=localhost NEXT_PUBLIC_RTMP_PORT=8080 npm run dev",
+    "player:build": "cd player-app && NEXT_PUBLIC_RTMP_HOST=localhost NEXT_PUBLIC_RTMP_PORT=8080 npm run build",
+    "player:start": "cd player-app && NEXT_PUBLIC_RTMP_HOST=localhost NEXT_PUBLIC_RTMP_PORT=8080 npm run start",
+    "rtmp:start": "docker compose up -d rtmp-server",
+    "rtmp:stop": "docker compose stop rtmp-server",
+    "rtmp:logs": "docker compose logs -f rtmp-server",
+    "rtmp:restart": "docker compose restart rtmp-server",
+    "start:all": "docker compose up -d",
+    "stop:all": "docker compose down",
+    "dev": "npm run rtmp:start && npm run player:dev"
+  },
+  "author": "",
+  "license": "ISC"
+} 

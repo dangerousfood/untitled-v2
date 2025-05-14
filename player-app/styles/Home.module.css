@@ -1,0 +1,63 @@
+.container {
+  font-family: Arial, sans-serif;
+  margin: 0 auto;
+  max-width: 900px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.main {
+  padding: 1rem 0;
+}
+
+.title {
+  margin: 0 0 1.5rem;
+  line-height: 1.15;
+  font-size: 2rem;
+  color: #2c3e50;
+}
+
+.videoContainer {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+  background-color: #000;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.controls {
+  margin-bottom: 20px;
+}
+
+.input {
+  padding: 8px;
+  width: 300px;
+  margin-right: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.streamUrls {
+  margin-top: 20px;
+  font-family: monospace;
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.instructions {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #4CAF50;
+}
+
+.instructions code {
+  background-color: #eee;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+} 

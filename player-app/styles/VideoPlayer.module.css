@@ -1,0 +1,1072 @@
+.videoWrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 375px;
+  min-height: 667px;
+}
+
+.video {
+  position: absolute;
+  width: 100vw; /* Fill width */
+  height: 100vh; /* Fill height */
+  object-fit: cover; /* Cover will maintain aspect ratio and fill container */
+  object-position: center;
+  z-index: 1;
+  background-color: #000;
+  /* Add aspect ratio as a fallback */
+  aspect-ratio: 9 / 16; 
+  max-width: 100vw;
+  min-width: 375px;
+  min-height: 667px;
+}
+
+.errorMessage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 16px;
+  z-index: 2;
+}
+
+/* Container for UI elements - positioned relative to the video */
+.videoUIContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; 
+  z-index: 5;
+  pointer-events: none;
+  min-width: 375px;
+}
+
+/* Snap button container */
+.snapButtonContainer {
+  /* Default sizing for .snapButtonContainer */
+  position: absolute;
+  bottom: 120px; /* Increased from 20px to move it higher */
+  right: 20px;
+  width: 81px; /* Increased from 60px by 35% */
+  height: 200px; /* Keep fixed height for number animations */
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  pointer-events: auto;
+  
+  /* Dynamic sizing using CSS variable - scale based on video width */
+  width: calc(min(81px, var(--video-width) * 0.2));
+  right: calc(min(20px, var(--video-width) * 0.05));
+  bottom: calc(var(--video-height) * 0.15);
+}
+
+/* This ensures the wrapper and buttons can still receive events */
+.buttonWrapper, .snapButton, .undoButton {
+  pointer-events: auto;
+}
+
+/* Snap button wrapper */
+.buttonWrapper {
+  /* Default sizing */
+  position: relative;
+  width: 81px; /* Increased from 60px by 35% */
+  height: 81px; /* Increased from 60px by 35% */
+  z-index: 10;
+  
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(81px, var(--video-width) * 0.2));
+  height: calc(min(81px, var(--video-width) * 0.2));
+}
+
+/* Snap button styling */
+.snapButton {
+  /* Default sizing */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 81px;
+  height: 81px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  outline: none;
+  overflow: hidden;
+  z-index: 15;
+  
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(81px, var(--video-width) * 0.2));
+  height: calc(min(81px, var(--video-width) * 0.2));
+}
+
+.snapButton img {
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(54px, var(--video-width) * 0.13));
+  height: calc(min(54px, var(--video-width) * 0.13));
+  object-fit: contain;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.snapButton:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.05);
+}
+
+.snapButton:active {
+  transform: scale(0.95);
+}
+
+/* Mario-style number popup */
+.snapNumber {
+  position: absolute;
+  font-size: 38px; /* Increased from 28px by ~35% */
+  font-weight: bold;
+  text-shadow: 
+    1px 1px 0 #000, 
+    -1px 1px 0 #000, 
+    1px -1px 0 #000, 
+    -1px -1px 0 #000,
+    0 1px 0 #000, 
+    0 -1px 0 #000,
+    1px 0 0 #000, 
+    -1px 0 0 #000;
+  z-index: 20;
+  animation: popNumber 2.5s ease-out forwards;
+  pointer-events: none;
+  font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+  transform: translateX(-50%);
+  text-align: center;
+  min-width: 67px; /* Increased from 50px by ~35% */
+  white-space: nowrap;
+  left: 50%;
+  margin-top: 65px; /* Increased from 48px by ~35% */
+  padding: 0;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+}
+
+@keyframes popNumber {
+  0% {
+    transform: translateX(-50%) scale(0.5) rotate(0deg);
+    opacity: 0;
+  }
+  10% { /* Start much lower on the button */
+    transform: translateX(-50%) scale(1.2) translateY(27px) rotate(10deg);
+    opacity: 1;
+  }
+  25% { /* Begin rising */
+    transform: translateX(-50%) scale(1) translateY(-27px) rotate(-5deg);
+    opacity: 1;
+  }
+  50% { /* Continue rising with a slight horizontal drift */
+    transform: translateX(-45%) scale(0.95) translateY(-120px) rotate(8deg);
+    opacity: 0.9;
+  }
+  75% { /* Drift slightly the other way */
+    transform: translateX(-55%) scale(0.9) translateY(-200px) rotate(-10deg);
+    opacity: 0.7;
+  }
+  100% { /* Float up to full container height */
+    transform: translateX(-50%) scale(0.85) translateY(-240px) rotate(5deg);
+    opacity: 0;
+  }
+}
+
+/* Chat button container with fixed spacing */
+.chatButtonContainer {
+  /* Default sizing */
+  position: absolute;
+  bottom: 120px; /* Increased from 20px to match snap button positioning */
+  right: 110px; /* Adjusted spacing for larger buttons */
+  width: 81px; /* Increased from 60px by 35% */
+  height: 81px; /* Increased from 60px by 35% */
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: auto;
+  
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(81px, var(--video-width) * 0.2));
+  height: calc(min(81px, var(--video-width) * 0.2));
+  right: calc(min(110px, var(--video-width) * 0.25));
+  bottom: calc(var(--video-height) * 0.15);
+}
+
+/* Hidden chat button style */
+.chatButtonContainer.hidden {
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+/* Chat button styling */
+.chatButton {
+  /* Default sizing */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 81px;
+  height: 81px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  outline: none;
+  overflow: hidden;
+  z-index: 15;
+  
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(81px, var(--video-width) * 0.2));
+  height: calc(min(81px, var(--video-width) * 0.2));
+}
+
+.chatButton img {
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(40px, var(--video-width) * 0.1));
+  height: calc(min(40px, var(--video-width) * 0.1));
+  object-fit: contain;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.chatButton:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.05);
+}
+
+.chatButton:active {
+  transform: scale(0.95);
+}
+
+/* Chat overlay - ensure it stays within video bounds */
+.chatOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 40%;
+  max-height: 40%; /* Ensure chat doesn't exceed 40% of video height */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; /* Align to bottom */
+  z-index: 5;
+  animation: fadeIn 0.3s ease-out forwards;
+  overflow: hidden;
+  box-sizing: border-box;
+  pointer-events: auto;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%); /* Add subtle gradient */
+  padding-bottom: 10px; /* Add padding to ensure space between chat and buttons */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Chat messages container */
+.chatMessagesContainer {
+  position: relative;
+  width: 100%;
+  height: calc(100% - min(60px, 10vh)); /* Subtract chat input height */
+  max-width: 100%;
+  max-height: calc(100% - min(60px, 10vh)); /* Ensure it doesn't overflow */
+  perspective: 1000px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 10px;
+  overflow: hidden;
+  margin-bottom: 0; /* Remove margin to prevent overflow */
+  box-sizing: border-box;
+  padding-left: min(20px, 5vw);
+  padding-right: min(20px, 5vw);
+  left: 0;
+  right: 0;
+}
+
+/* Chat input area - fixed at bottom */
+.chatInputArea {
+  position: relative; /* Changed from absolute to relative */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: min(60px, 10vh);
+  min-height: 40px; /* Ensure minimum tap target size */
+  display: flex;
+  align-items: center;
+  padding: 0 min(20px, 5vw);
+  box-sizing: border-box;
+  z-index: 10;
+  max-width: 100%;
+  background-color: rgba(0, 0, 0, 0.4); /* Add slight background for better visibility */
+  margin-top: 10px; /* Added to provide space between messages and input */
+}
+
+.chatInput {
+  flex: 1;
+  height: min(40px, 7vh);
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  color: white;
+  padding: 0 15px;
+  font-size: min(16px, 4vw);
+  outline: none;
+  margin-right: min(20px, 4vw);
+  max-width: calc(100% - 80px);
+}
+
+.chatInput::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chatInput:focus {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.sendButton {
+  position: relative;
+  width: min(40px, 8vw);
+  height: min(40px, 8vw);
+  border-radius: 50%;
+  background-color: #FF4081;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  outline: none;
+  overflow: visible;
+  margin-right: min(20px, 4vw);
+}
+
+.sendButton:hover {
+  background-color: #F50057;
+  transform: scale(1.05);
+}
+
+.sendButton:active {
+  transform: scale(0.95);
+}
+
+.sendButton svg {
+  width: min(20px, 4vw);
+  height: min(20px, 4vw);
+  fill: white;
+}
+
+.sendCounter {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: #2196F3;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Individual chat message */
+.chatMessage {
+  position: absolute;
+  left: 50%;
+  transform-origin: center;
+  padding: 12px 20px;
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: bold;
+  text-align: center;
+  transition: all 0.5s ease;
+  font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  white-space: normal;
+  word-break: break-word;
+  max-width: calc(100% - 40px);
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  width: auto;
+  min-width: 50px;
+}
+
+/* When it's the only message, animate quickly to the top */
+.chatMessage:only-child {
+  transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); /* Fast spring-like animation */
+  animation: quickMoveToTop 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes quickMoveToTop {
+  0% {
+    transform: translateX(-50%) translateZ(0) scale(0.5);
+    opacity: 0.4;
+    bottom: 15%; /* Start higher to stay within chat area */
+    width: 40%;
+    max-width: calc(80% - 40px);
+  }
+  100% {
+    transform: translateX(-50%) translateZ(250px) scale(1);
+    opacity: 1;
+    bottom: 55%; /* End lower to stay within chat area */
+    width: 80%;
+    max-width: calc(90% - 40px);
+  }
+}
+
+/* User messages have a different style */
+.chatMessage.userMessage {
+  background-color: rgba(33, 150, 243, 0.9); /* Blue background */
+  color: white;
+}
+
+/* Sizing for messages at different positions */
+.chatMessage.position0 {
+  font-size: min(14px, 3vw);
+  bottom: 5%;
+  transform: translateX(-50%) translateZ(0) scale(0.5);
+  opacity: 0.4;
+  z-index: 1;
+  width: 40%;
+  max-width: calc(80% - 40px);
+}
+
+.chatMessage.position1 {
+  font-size: min(16px, 3.2vw);
+  bottom: 10%;
+  transform: translateX(-50%) translateZ(50px) scale(0.6);
+  opacity: 0.6;
+  z-index: 2;
+  width: 50%;
+  max-width: calc(80% - 40px);
+}
+
+.chatMessage.position2 {
+  font-size: min(18px, 3.5vw);
+  bottom: 20%;
+  transform: translateX(-50%) translateZ(100px) scale(0.7);
+  opacity: 0.7;
+  z-index: 3;
+  width: 60%;
+  max-width: calc(85% - 40px);
+}
+
+.chatMessage.position3 {
+  font-size: min(20px, 3.8vw);
+  bottom: 30%;
+  transform: translateX(-50%) translateZ(150px) scale(0.8);
+  opacity: 0.8;
+  z-index: 4;
+  width: 65%;
+  max-width: calc(85% - 40px);
+}
+
+.chatMessage.position4 {
+  font-size: min(22px, 4vw);
+  bottom: 45%;
+  transform: translateX(-50%) translateZ(200px) scale(0.9);
+  opacity: 0.9;
+  z-index: 5;
+  width: 75%;
+  max-width: calc(90% - 40px);
+}
+
+.chatMessage.position5 {
+  font-size: min(24px, 4.5vw);
+  bottom: 60%; /* Keep this as max height */
+  transform: translateX(-50%) translateZ(250px) scale(1);
+  opacity: 1;
+  z-index: 6;
+  width: 80%;
+  max-width: calc(90% - 40px);
+}
+
+/* Animation for message at position 5 (exiting) */
+.chatMessage.exit {
+  animation: exitMessage 2.5s ease-out forwards;
+}
+
+@keyframes exitMessage {
+  0% {
+    transform: translateX(-50%) translateZ(250px) scale(1) rotate(0deg);
+    opacity: 1;
+    bottom: 60%;
+  }
+  10% {
+    transform: translateX(-50%) translateZ(250px) scale(1.2) translateY(20px) rotate(5deg);
+    opacity: 1;
+    bottom: 60%;
+  }
+  25% {
+    transform: translateX(-50%) translateZ(250px) scale(1) translateY(-20px) rotate(-5deg);
+    opacity: 1;
+    bottom: 65%; /* Reduced from 70% to keep within bounds */
+  }
+  50% {
+    transform: translateX(-45%) translateZ(250px) scale(0.95) translateY(-40px) rotate(8deg);
+    opacity: 0.9;
+    bottom: 70%; /* Reduced from 80% to keep within bounds */
+  }
+  75% {
+    transform: translateX(-55%) translateZ(250px) scale(0.9) translateY(-60px) rotate(-10deg);
+    opacity: 0.7;
+    bottom: 75%; /* Reduced from 90% to keep within bounds */
+  }
+  100% {
+    transform: translateX(-50%) translateZ(250px) scale(0.85) translateY(-80px) rotate(5deg);
+    opacity: 0;
+    bottom: 80%; /* Reduced from 100% to keep within bounds */
+  }
+}
+
+/* Stream info panel */
+.streamInfo {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.streamAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+}
+
+.streamAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.streamDetails {
+  margin-left: 12px;
+  min-width: 140px; /* Ensure enough space for follow button */
+}
+
+.streamUsername {
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0 0 5px 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.streamStats {
+  display: flex;
+  align-items: center;
+}
+
+.viewerCount {
+  display: flex;
+  align-items: center;
+  color: #ff4081;
+  font-size: 14px;
+  margin-right: 12px;
+}
+
+.viewerCount svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  fill: currentColor;
+}
+
+.streamTimeRemaining {
+  display: flex;
+  align-items: center;
+  color: #ff4081; /* Changed to same color as viewer count for emphasis */
+  font-size: 14px;
+}
+
+.streamTimeRemaining svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  fill: currentColor;
+}
+
+/* Follow button in stream info */
+.streamFollowButton {
+  background-color: #FF4081;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.streamFollowButton:hover {
+  background-color: #F50057;
+}
+
+.streamFollowButton.following {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.streamFollowButton.following:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Replace media query with attribute-based styling */
+/* Styles for small video sizes (500px and below) */
+[data-video-size="xs"] .snapButtonContainer {
+  bottom: 85px;
+  right: 10px;
+  width: 50px;
+}
+
+[data-video-size="xs"] .buttonWrapper {
+  width: 50px;
+  height: 50px;
+}
+
+[data-video-size="xs"] .snapButton {
+  width: 50px;
+  height: 50px;
+}
+
+[data-video-size="xs"] .snapButton img {
+  width: 32px;
+  height: 32px;
+}
+
+[data-video-size="xs"] .chatButtonContainer {
+  bottom: 85px;
+  right: 70px;
+  width: 50px;
+  height: 50px;
+}
+
+[data-video-size="xs"] .chatButton {
+  width: 50px;
+  height: 50px;
+}
+
+[data-video-size="xs"] .chatButton img {
+  width: 25px;
+  height: 25px;
+}
+
+[data-video-size="xs"] .muteButton {
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+}
+
+[data-video-size="xs"] .muteButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+[data-video-size="xs"] .undoButton {
+  top: 60px;
+  width: 35px;
+  height: 35px;
+}
+
+[data-video-size="xs"] .undoButton img {
+  width: 18px;
+  height: 18px;
+}
+
+[data-video-size="xs"] .snapNumber {
+  font-size: 28px;
+  margin-top: 40px;
+  min-width: 45px;
+}
+
+/* Small (400px < width <= 500px) */
+[data-video-size="sm"] .snapButtonContainer {
+  bottom: 100px;
+  right: 15px;
+  width: 60px;
+}
+
+[data-video-size="sm"] .buttonWrapper {
+  width: 60px;
+  height: 60px;
+}
+
+[data-video-size="sm"] .snapButton {
+  width: 60px;
+  height: 60px;
+}
+
+[data-video-size="sm"] .snapButton img {
+  width: 40px;
+  height: 40px;
+}
+
+[data-video-size="sm"] .chatButtonContainer {
+  bottom: 100px;
+  right: 85px;
+  width: 60px;
+  height: 60px;
+}
+
+[data-video-size="sm"] .chatButton {
+  width: 60px;
+  height: 60px;
+}
+
+[data-video-size="sm"] .chatButton img {
+  width: 30px;
+  height: 30px;
+}
+
+[data-video-size="sm"] .muteButton {
+  top: 15px;
+  right: 15px;
+  width: 48px;
+  height: 48px;
+}
+
+[data-video-size="sm"] .muteButton svg {
+  width: 24px;
+  height: 24px;
+}
+
+[data-video-size="sm"] .undoButton {
+  top: 70px;
+  width: 40px;
+  height: 40px;
+}
+
+[data-video-size="sm"] .undoButton img {
+  width: 20px;
+  height: 20px;
+}
+
+[data-video-size="sm"] .snapNumber {
+  font-size: 32px;
+  margin-top: 48px;
+  min-width: 54px;
+}
+
+/* Medium (500px < width <= 700px) */
+[data-video-size="md"] .snapButtonContainer {
+  bottom: 110px;
+  right: 20px;
+  width: 70px;
+}
+
+[data-video-size="md"] .buttonWrapper {
+  width: 70px;
+  height: 70px;
+}
+
+[data-video-size="md"] .snapButton {
+  width: 70px;
+  height: 70px;
+}
+
+[data-video-size="md"] .snapButton img {
+  width: 46px;
+  height: 46px;
+}
+
+[data-video-size="md"] .chatButtonContainer {
+  bottom: 110px;
+  right: 100px;
+  width: 70px;
+  height: 70px;
+}
+
+[data-video-size="md"] .chatButton {
+  width: 70px;
+  height: 70px;
+}
+
+[data-video-size="md"] .chatButton img {
+  width: 35px;
+  height: 35px;
+}
+
+[data-video-size="md"] .muteButton {
+  top: 20px;
+  right: 20px;
+  width: 55px;
+  height: 55px;
+}
+
+[data-video-size="md"] .muteButton svg {
+  width: 28px;
+  height: 28px;
+}
+
+[data-video-size="md"] .undoButton {
+  top: 80px;
+  width: 45px;
+  height: 45px;
+}
+
+[data-video-size="md"] .undoButton img {
+  width: 22px;
+  height: 22px;
+}
+
+[data-video-size="md"] .snapNumber {
+  font-size: 35px;
+  margin-top: 55px;
+  min-width: 60px;
+}
+
+/* Large (width > 700px) - use default sizes defined earlier in the CSS */
+/* No need to redefine as these are already the default values */
+
+/* Mute button styling */
+.muteButton {
+  /* Default sizing */
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 65px; /* Increased from 48px by 35% */
+  height: 65px; /* Increased from 48px by 35% */
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.2s ease, border-color 0.2s ease;
+  padding: 0;
+  outline: none;
+  transform-origin: right top;
+  pointer-events: auto;
+  
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(65px, var(--video-width) * 0.16));
+  height: calc(min(65px, var(--video-width) * 0.16));
+  top: calc(min(20px, var(--video-width) * 0.05));
+  right: calc(min(20px, var(--video-width) * 0.05));
+}
+
+.muteButton svg {
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(32px, var(--video-width) * 0.08));
+  height: calc(min(32px, var(--video-width) * 0.08));
+}
+
+.muteButton.hidden {
+  opacity: 0;
+  transform: translateX(50px);
+  pointer-events: none;
+}
+
+.muteButton.visible {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.muteButton:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.muteButton:active {
+  opacity: 0.9;
+}
+
+/* User profile popup */
+.profilePopup {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: min(19px, 3vh) min(20px, 5vw);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 80%, transparent 100%);
+  display: flex;
+  align-items: center;
+  animation: slideDown 0.5s ease-out forwards;
+  z-index: 5;
+  min-height: min(125px, 20vh);
+  max-width: 100%;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.profilePicture {
+  width: min(62px, 15vw);
+  height: min(62px, 15vw);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid white;
+  flex-shrink: 0;
+}
+
+.profilePicture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileInfo {
+  margin-left: 15px; /* Increased from 12px */
+  flex-grow: 1;
+}
+
+.username {
+  color: white;
+  font-size: min(18px, 4vw);
+  margin: 0 0 min(12px, 2vh) 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.followButton {
+  background-color: #FF4081;
+  color: white;
+  border: none;
+  padding: min(8px, 1.5vh) min(16px, 3vw);
+  border-radius: 4px;
+  font-size: min(15px, 3.5vw);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.followButton:hover {
+  background-color: #F50057;
+}
+
+.followButton.following {
+  background-color: #333;
+}
+
+.followButton.following:hover {
+  background-color: #555;
+}
+
+/* Undo button styling */
+.undoButton {
+  /* Default sizing */
+  position: absolute;
+  top: 90px; /* Adjusted for larger button */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 54px; /* Increased from 40px by 35% */
+  height: 54px; /* Increased from 40px by 35% */
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  overflow: hidden;
+  z-index: 9;
+  transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.15s ease, border-color 0.15s ease;
+  transform-origin: top center;
+  pointer-events: auto;
+  
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(54px, var(--video-width) * 0.13));
+  height: calc(min(54px, var(--video-width) * 0.13));
+  top: calc(min(90px, var(--video-width) * 0.22));
+}
+
+.undoButton img {
+  /* Default sizing */
+  width: 27px; /* Increased from 20px by 35% */
+  height: 27px; /* Increased from 20px by 35% */
+  object-fit: contain;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  
+  /* Dynamic sizing using CSS variable */
+  width: calc(min(27px, var(--video-width) * 0.07));
+  height: calc(min(27px, var(--video-width) * 0.07));
+}
+
+.undoButton:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.undoButton:active {
+  opacity: 0.9;
+} 

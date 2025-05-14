@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RTMP Stream Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            margin-bottom: 20px;
+        }
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #4CAF50;
+        }
+        .stream-urls {
+            margin-top: 20px;
+            font-family: monospace;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Stream Player</h1>
+
+        <div class="video-container">
+            <video id="video" controls autoplay></video>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="streamKey" placeholder="Stream Key (e.g., stream1)" value="stream1">
+            <button onclick="loadStream()">Load Stream</button>
+            <button onclick="refreshStats()">View Stats</button>
+        </div>
+
+        <div class="stream-urls">
+            <p><strong>Stream URLs:</strong></p>
+            <div id="urls"></div>
+        </div>
+
+        <div class="instructions">
+            <h2>How to use this player</h2>
+            <p>1. Make sure you're streaming from OBS to: <code>rtmp://localhost:1935/live</code> with your chosen stream key</p>
+            <p>2. Enter your stream key in the field above and click "Load Stream"</p>
+            <p>3. If everything is set up correctly, your stream should appear in the player above</p>
+            <p>4. If the stream doesn't appear, check the <a href="/stat" target="_blank">RTMP Statistics Page</a> to verify your stream is active</p>
+        </div>
+    </div>
+
+    <script>
+        function loadStream() {
+            const streamKey = document.getElementById('streamKey').value.trim();
+            const videoElement = document.getElementById('video');
+            
+            // HLS URL (works in browsers)
+            const hlsUrl = `/hls/${streamKey}.m3u8`;
+            // RTMP URL (for external players like VLC)
+            const rtmpUrl = `rtmp://localhost:1935/live/${streamKey}`;
+            
+            // Display URLs
+            document.getElementById('urls').innerHTML = 
+                `<p>HLS (browser): ${hlsUrl}</p>
+                 <p>RTMP (VLC): ${rtmpUrl}</p>`;
+            
+            // Use HLS.js if supported
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(hlsUrl);
+                hls.attachMedia(videoElement);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    videoElement.play();
+                });
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        console.error('HLS error:', data);
+                        alert('Error loading stream. Make sure you are streaming to the server with the correct stream key.');
+                    }
+                });
+            }
+            // For Safari which has native HLS support
+            else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                videoElement.src = hlsUrl;
+                videoElement.addEventListener('loadedmetadata', function() {
+                    videoElement.play();
+                });
+                videoElement.addEventListener('error', function() {
+                    alert('Error loading stream. Make sure you are streaming to the server with the correct stream key.');
+                });
+            } else {
+                alert('Your browser does not support HLS playback. Try VLC with the RTMP URL: ' + rtmpUrl);
+            }
+        }
+
+        function refreshStats() {
+            window.open('/stat', '_blank');
+        }
+    </script>
+</body>
+</html> 

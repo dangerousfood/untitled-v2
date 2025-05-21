@@ -1,4 +1,5 @@
 import React from 'react';
+
 import styles from '../styles/VideoPlayer.module.css';
 
 const profileStyles = {
@@ -45,9 +46,16 @@ const profileStyles = {
   followingButton: {
     backgroundColor: '#333'
   }
-};
+} as const;
 
-const Profile = ({ 
+interface ProfileProps {
+  username?: string;
+  profilePic?: string;
+  isFollowing?: boolean;
+  onToggleFollow?: () => void;
+}
+
+export const Profile: React.FC<ProfileProps> = ({ 
   username = 'User',
   profilePic = 'https://i.pravatar.cc/150',
   isFollowing = false,
@@ -76,5 +84,3 @@ const Profile = ({
     </div>
   );
 };
-
-export default Profile; 

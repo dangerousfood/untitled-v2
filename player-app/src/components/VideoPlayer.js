@@ -6,8 +6,8 @@ import MuteButton from './MuteButton';
 import ChatButton from './ChatButton';
 import SnapButton from './SnapButton';
 import VideoControls from './VideoControls';
-import useSnapEffect from '../hooks/useSnapEffect';
-import useVideoSizing from '../hooks/useVideoSizing';
+import useSnapEffect from '../public/hooks/useSnapEffect';
+import useVideoSizing from '../public/hooks/useVideoSizing';
 
 const VideoPlayer = ({ 
   streamKey, 
@@ -58,6 +58,7 @@ const VideoPlayer = ({
     stopContinuousSnap: () => {},
     handleUndoSnap: () => {}
   };
+
   
   // Update internal muted state when prop changes
   useEffect(() => {
@@ -208,6 +209,8 @@ const VideoPlayer = ({
     setShowMuteButton(true);
     setShowChatButton(true); 
   };
+
+  console.log('VideoPlayer ERROR', error);
 
   // If only rendering the video element without UI
   if (onlyVideoElement) {

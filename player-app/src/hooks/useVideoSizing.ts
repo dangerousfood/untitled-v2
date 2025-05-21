@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 
-const useVideoSizing = (videoRef, wrapperRef) => {
+const useVideoSizing = (videoRef: React.RefObject<HTMLElement>, wrapperRef: React.RefObject<HTMLElement>) => {
   const updateVideoSize = useCallback(() => {
     if (!videoRef.current || !wrapperRef.current) return;
     
@@ -17,7 +17,7 @@ const useVideoSizing = (videoRef, wrapperRef) => {
       videoRef.current.style.objectFit = 'contain';
       
       // Set data attributes on the wrapper based on the actual video width
-      wrapperRef.current.setAttribute('data-video-width', Math.round(finalWidth));
+      wrapperRef.current.setAttribute('data-video-width', Math.round(finalWidth).toString());
       
       // Also set width as a CSS variable for more precise responsive adjustments
       wrapperRef.current.style.setProperty('--video-width', `${Math.round(finalWidth)}px`);
@@ -35,7 +35,7 @@ const useVideoSizing = (videoRef, wrapperRef) => {
       }
       
       // Update UI container to match video dimensions
-      const uiContainer = wrapperRef.current.querySelector('[data-ui-container="true"]');
+      const uiContainer: HTMLElement | null = wrapperRef.current.querySelector('[data-ui-container="true"]');
       if (uiContainer) {
         uiContainer.style.height = `${height}px`;
         uiContainer.style.width = `${finalWidth}px`;
@@ -52,7 +52,7 @@ const useVideoSizing = (videoRef, wrapperRef) => {
       videoRef.current.style.objectFit = 'cover';
       
       // For portrait mode, use actual viewport width for sizing decisions
-      wrapperRef.current.setAttribute('data-video-width', Math.round(viewportWidth));
+      wrapperRef.current.setAttribute('data-video-width', Math.round(viewportWidth).toString());
       
       // Also set width as a CSS variable for more precise responsive adjustments
       wrapperRef.current.style.setProperty('--video-width', `${Math.round(viewportWidth)}px`);
@@ -70,7 +70,7 @@ const useVideoSizing = (videoRef, wrapperRef) => {
       }
       
       // Reset UI container to full width
-      const uiContainer = wrapperRef.current.querySelector('[data-ui-container="true"]');
+      const uiContainer: HTMLElement | null = wrapperRef.current.querySelector('[data-ui-container="true"]');
       if (uiContainer) {
         uiContainer.style.height = `${height}px`;
         uiContainer.style.width = '100%';

@@ -7,8 +7,8 @@
     "dev": "NEXT_PUBLIC_RTMP_HOST=localhost NEXT_PUBLIC_RTMP_PORT=8080 next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "next lint ./src",
+    "lint:fix": "next lint --fix ./src",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

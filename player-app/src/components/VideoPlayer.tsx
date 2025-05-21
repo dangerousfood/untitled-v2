@@ -202,8 +202,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setShowChatButton(true);
   };
 
-  console.log("VideoPlayer ERROR", error);
-
   // If only rendering the video element without UI
   if (onlyVideoElement) {
     return (

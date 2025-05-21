@@ -1,15 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import VideoPlayer from "./VideoPlayer";
-import ControlsOverlay from "./ControlsOverlay";
-import SnapButton from "./SnapButton";
-import ChatButton from "./ChatButton";
-import MuteButton from "./MuteButton";
+import { useEffect, useRef,useState } from "react";
+
 import { useSnapEffect } from "@/hooks/useSnapEffect";
+
+import { ChatButton } from "./ChatButton";
+import { ControlsOverlay } from "./ControlsOverlay";
+import { MuteButton } from "./MuteButton";
+import { SnapButton } from "./SnapButton";
+import VideoPlayer from "./VideoPlayer";
+
 import styles from "../styles/StreamFeed.module.css";
 
-const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
+interface StreamFeedProps {
+  streams: string[];
+}
+
+export const StreamFeed: React.FC<StreamFeedProps> = ({ streams }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const feedRef = useRef(null);
   const touchStartY = useRef(0);
@@ -19,7 +26,6 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
   const scrollTimeoutRef = useRef(null);
   const lastScrollTime = useRef(0);
   const [isMuted, setIsMuted] = useState(true);
-  const [showMuteButton, setShowMuteButton] = useState(true);
 
   // Use snap effect hook directly
   const snapEffectProps = useSnapEffect();
@@ -30,7 +36,7 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
   const profilePic = `https://i.pravatar.cc/150?u=${currentStreamKey}`;
 
   // Handle mute button toggle
-  const handleMuteChange = (newMutedState) => {
+  const handleMuteChange = (newMutedState: boolean) => {
     setIsMuted(newMutedState);
   };
 
@@ -73,22 +79,26 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
     setCurrentIndex(prevIndex);
   };
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     if (isTransitioning) return;
     // Skip if the touch is on a fixed overlay element
     if (
-      e.target.closest('[data-fixed-overlay="true"], [data-ui-element="true"]')
+      (e.target as HTMLElement).closest(
+        '[data-fixed-overlay="true"], [data-ui-element="true"]'
+      )
     )
       return;
     touchStartY.current = e.touches[0].clientY;
     swipeInProgress.current = true;
   };
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = (e: React.TouchEvent<HTMLEmbedElement>) => {
     if (!swipeInProgress.current || isTransitioning) return;
     // Skip if the touch is on a fixed overlay element
     if (
-      e.target.closest('[data-fixed-overlay="true"], [data-ui-element="true"]')
+      (e.target as HTMLElement).closest(
+        '[data-fixed-overlay="true"], [data-ui-element="true"]'
+      )
     )
       return;
     touchEndY.current = e.touches[0].clientY;
@@ -97,11 +107,13 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
     e.preventDefault();
   };
 
-  const handleTouchEnd = (e) => {
+  const handleTouchEnd = (e: React.SyntheticEvent) => {
     if (!swipeInProgress.current || isTransitioning) return;
     // Skip if the touch is on a fixed overlay element
     if (
-      e.target.closest('[data-fixed-overlay="true"], [data-ui-element="true"]')
+      (e.target as HTMLElement).closest(
+        '[data-fixed-overlay="true"], [data-ui-element="true"]'
+      )
     )
       return;
 
@@ -128,13 +140,15 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
     swipeInProgress.current = false;
   };
 
-  const handleWheel = (e) => {
+  const handleWheel = (e: React.WheelEvent<HTMLElement>) => {
     // Return early if we're already transitioning
     if (isTransitioning) return;
 
     // Skip if the wheel event is on a fixed overlay element
     if (
-      e.target.closest('[data-fixed-overlay="true"], [data-ui-element="true"]')
+      (e.target as HTMLElement).closest(
+        '[data-fixed-overlay="true"], [data-ui-element="true"]'
+      )
     )
       return;
 
@@ -265,12 +279,9 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
 
       {/* Fixed overlay for profile and chat */}
       <ControlsOverlay
+        key={currentIndex}
         username={username}
         profilePic={profilePic}
-        isMuted={isMuted}
-        onMuteChange={handleMuteChange}
-        activeStreamKey={currentStreamKey}
-        key={currentIndex}
       />
 
       {/* Fixed controls */}
@@ -288,7 +299,6 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
           onSnap={snapEffectProps.handleSnapClick}
           onContinuousSnap={snapEffectProps.startContinuousSnap}
           onStopContinuousSnap={snapEffectProps.stopContinuousSnap}
-          snapCount={snapEffectProps.snapCount}
           snapNumbers={snapEffectProps.snaps}
           lastSnap={snapEffectProps.lastSnap}
           isAutoResetting={snapEffectProps.isAutoResetting}
@@ -310,9 +320,7 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
       >
         <ChatButton
           isVisible={true}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
+          onClick={() => {
             // Show chat in the overlay by triggering a custom event
             const customEvent = new CustomEvent("toggleChatRequest");
             document.dispatchEvent(customEvent);
@@ -333,8 +341,7 @@ const StreamFeed = ({ streams = ["stream1", "stream2", "stream3"] }) => {
         <MuteButton
           isMuted={isMuted}
           isVisible={true}
-          onToggleMute={(e) => {
-            e.stopPropagation();
+          onToggleMute={() => {
             handleMuteChange(!isMuted);
           }}
         />

@@ -1,22 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
-import styles from '../styles/VideoPlayer.module.css';
-import Chat from './Chat';
-import Profile from './Profile';
-import MuteButton from './MuteButton';
-import ChatButton from './ChatButton';
-import SnapButton from './SnapButton';
-import VideoControls from './VideoControls';
-import useSnapEffect from '../public/hooks/useSnapEffect';
-import useVideoSizing from '../public/hooks/useVideoSizing';
+import { useEffect, useRef, useState } from "react";
 
-const VideoPlayer = ({ 
-  streamKey, 
-  isActive = false, 
-  isMuted = true,
+import { useSnapEffect } from "@/hooks/useSnapEffect";
+import { useVideoSizing } from "@/hooks/useVideoSizing";
+
+import { Chat } from "./Chat";
+import { ChatButton } from "./ChatButton";
+import { MuteButton } from "./MuteButton";
+import { Profile } from "./Profile";
+import { SnapButton } from "./SnapButton";
+import { VideoControls } from "./VideoControls";
+
+import styles from "../styles/VideoPlayer.module.css";
+
+interface VideoPlayerProps {
+  streamKey: string;
+  isActive: boolean;
+  isMuted: boolean;
+  onlyVideoElement?: boolean;
+  onMuteChange?: (isMuted: boolean) => void;
+}
+
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  streamKey,
+  isActive,
+  isMuted,
   onlyVideoElement = false,
-  onMuteChange = null
+  onMuteChange,
 }) => {
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const videoWrapperRef = useRef(null);
   const [error, setError] = useState(false);
   const [internalMuted, setInternalMuted] = useState(isMuted);
@@ -25,18 +36,17 @@ const VideoPlayer = ({
   const [showChatButton, setShowChatButton] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const profileTimeoutRef = useRef(null);
-  
+  const profileTimeoutRef = useRef<NodeJS.Timeout>(null);
+
   // Username and profile picture
-  const username = `@${streamKey.replace(/[0-9]/g, '')}Streamer`;
+  const username = `@${streamKey.replace(/[0-9]/g, "")}Streamer`;
   const profilePic = `https://i.pravatar.cc/150?u=${streamKey}`;
-  
+
   // Use custom hooks - always use for sizing even in onlyVideoElement mode
   const { updateVideoSize } = useVideoSizing(videoRef, videoWrapperRef);
-  
+
   // Only use snap effects if we're rendering the full component
   const {
-    snapCount,
     snaps,
     lastSnap,
     showUndoButton,
@@ -45,50 +55,38 @@ const VideoPlayer = ({
     handleSnapClick,
     startContinuousSnap,
     stopContinuousSnap,
-    handleUndoSnap
-  } = !onlyVideoElement ? useSnapEffect() : {
-    snapCount: 0,
-    snaps: [],
-    lastSnap: null,
-    showUndoButton: false,
-    undoButtonStyle: {},
-    isAutoResetting: false,
-    handleSnapClick: () => {},
-    startContinuousSnap: () => {},
-    stopContinuousSnap: () => {},
-    handleUndoSnap: () => {}
-  };
+    handleUndoSnap,
+  } = useSnapEffect();
 
-  
   // Update internal muted state when prop changes
   useEffect(() => {
     setInternalMuted(isMuted);
   }, [isMuted]);
-  
+
   // Auto-hide profile after a delay - only used in full component mode
   useEffect(() => {
     if (onlyVideoElement) return;
-    
+
     if (showProfile) {
       // Clear any existing timeout
       if (profileTimeoutRef.current) {
         clearTimeout(profileTimeoutRef.current);
       }
-      
+
       // Set new timeout to hide profile after 5 seconds
       profileTimeoutRef.current = setTimeout(() => {
         setShowProfile(false);
-        
+
         // Hide mute button if video is not muted
         if (!internalMuted) {
           setShowMuteButton(false);
         }
       }, 5000);
-      
+
       // Show mute button when profile is shown
       setShowMuteButton(true);
     }
-    
+
     return () => {
       if (profileTimeoutRef.current) {
         clearTimeout(profileTimeoutRef.current);
@@ -99,7 +97,7 @@ const VideoPlayer = ({
   // Update mute button visibility when mute state changes - only in full component mode
   useEffect(() => {
     if (onlyVideoElement) return;
-    
+
     // Always show the mute button when the video is muted
     if (internalMuted) {
       setShowMuteButton(true);
@@ -108,23 +106,23 @@ const VideoPlayer = ({
       setShowMuteButton(false);
     }
   }, [internalMuted, showProfile, onlyVideoElement]);
-  
+
   // Force update video sizing on mount and when active state changes
   useEffect(() => {
     updateVideoSize();
-    
+
     // Set up a resize handler for more responsive sizing
     const handleResize = () => {
       updateVideoSize();
     };
-    
-    window.addEventListener('resize', handleResize);
-    
+
+    window.addEventListener("resize", handleResize);
+
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, [isActive, updateVideoSize]);
-  
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -133,30 +131,26 @@ const VideoPlayer = ({
       }
     };
   }, []);
-  
+
   // Handle mute toggle
-  const handleToggleMute = (e) => {
-    e.stopPropagation();
+  const handleToggleMute = () => {
     const newMutedState = !internalMuted;
     setInternalMuted(newMutedState);
     if (onMuteChange) {
       onMuteChange(newMutedState);
     }
   };
-  
+
   // Handle chat button click
-  const handleChatClick = (e) => {
+  const handleChatClick = () => {
     if (onlyVideoElement) return;
-    
-    e.stopPropagation();
-    e.preventDefault();
-    
+
     const newChatState = !showChat;
     setShowChat(newChatState);
-    
+
     // Toggle chat button visibility - hide when chat is open
     setShowChatButton(!newChatState);
-    
+
     // If opening chat, hide the profile popup
     if (newChatState) {
       setShowProfile(false);
@@ -166,25 +160,24 @@ const VideoPlayer = ({
       setShowMuteButton(true);
     }
   };
-  
+
   // Toggle follow state
-  const handleToggleFollow = (e) => {
+  const handleToggleFollow = () => {
     if (onlyVideoElement) return;
-    
-    e.stopPropagation();
-    setIsFollowing(prev => !prev);
+
+    setIsFollowing((prev) => !prev);
   };
-  
+
   // Handle clicking on the video
-  const handleVideoClick = (e) => {
+  const handleVideoClick = (e: React.SyntheticEvent) => {
     // If we're only rendering the video element, skip interaction handling
     if (onlyVideoElement) return;
-    
+
     // Don't process clicks on buttons or UI elements
-    if (e.target.closest('[data-ui-element="true"]')) {
+    if ((e.target as HTMLElement).closest('[data-ui-element="true"]')) {
       return;
     }
-    
+
     // Close chat if it's open
     if (showChat) {
       setShowChat(false);
@@ -193,32 +186,28 @@ const VideoPlayer = ({
       setShowChatButton(true);
       return;
     }
-    
+
     // Toggle profile popup
-    setShowProfile(prev => !prev);
+    setShowProfile((prev) => !prev);
   };
-  
+
   // Handle chat close
-  const handleChatClose = (e) => {
+  const handleChatClose = () => {
     if (onlyVideoElement) return;
-    
-    e.stopPropagation();
+
     // Close chat and show profile
     setShowChat(false);
     setShowProfile(true);
     setShowMuteButton(true);
-    setShowChatButton(true); 
+    setShowChatButton(true);
   };
 
-  console.log('VideoPlayer ERROR', error);
+  console.log("VideoPlayer ERROR", error);
 
   // If only rendering the video element without UI
   if (onlyVideoElement) {
     return (
-      <div 
-        className={styles.videoWrapper} 
-        ref={videoWrapperRef}
-      >
+      <div className={styles.videoWrapper} ref={videoWrapperRef}>
         <VideoControls
           streamKey={streamKey}
           isActive={isActive}
@@ -227,11 +216,9 @@ const VideoPlayer = ({
           isMuted={internalMuted}
           ref={videoRef}
         />
-        
+
         {error && (
-          <div className={styles.errorMessage}>
-            Stream not available
-          </div>
+          <div className={styles.errorMessage}>Stream not available</div>
         )}
       </div>
     );
@@ -239,9 +226,9 @@ const VideoPlayer = ({
 
   // Full video player with UI
   return (
-    <div 
-      className={styles.videoWrapper} 
-      ref={videoWrapperRef} 
+    <div
+      className={styles.videoWrapper}
+      ref={videoWrapperRef}
       onClick={handleVideoClick}
     >
       {/* Video element */}
@@ -253,36 +240,28 @@ const VideoPlayer = ({
         isMuted={internalMuted}
         ref={videoRef}
       />
-      
+
       {/* Error message */}
-      {error && (
-        <div className={styles.errorMessage}>
-          Stream not available
-        </div>
-      )}
-      
+      {error && <div className={styles.errorMessage}>Stream not available</div>}
+
       {/* UI Container */}
-      <div 
-        className={styles.videoUIContainer} 
-        data-ui-container="true"
-      >
+      <div className={styles.videoUIContainer} data-ui-container="true">
         {/* Profile component */}
         {showProfile && (
-          <Profile 
+          <Profile
             username={username}
             profilePic={profilePic}
             isFollowing={isFollowing}
             onToggleFollow={handleToggleFollow}
           />
         )}
-        
+
         {/* Snap button component */}
         <div data-ui-element="true">
           <SnapButton
             onSnap={handleSnapClick}
             onContinuousSnap={startContinuousSnap}
             onStopContinuousSnap={stopContinuousSnap}
-            snapCount={snapCount}
             snapNumbers={snaps}
             lastSnap={lastSnap}
             isAutoResetting={isAutoResetting}
@@ -291,7 +270,7 @@ const VideoPlayer = ({
             undoButtonStyle={undoButtonStyle}
           />
         </div>
-        
+
         {/* Mute button component */}
         <div data-ui-element="true">
           <MuteButton
@@ -300,25 +279,17 @@ const VideoPlayer = ({
             onToggleMute={handleToggleMute}
           />
         </div>
-        
+
         {/* Chat button component */}
         <div data-ui-element="true">
-          <ChatButton
-            isVisible={showChatButton}
-            onClick={handleChatClick}
-          />
+          <ChatButton isVisible={showChatButton} onClick={handleChatClick} />
         </div>
-        
+
         {/* Chat component */}
-        {showChat && (
-          <Chat 
-            onClose={handleChatClose}
-            username={username}
-          />
-        )}
+        {showChat && <Chat onClose={handleChatClose} />}
       </div>
     </div>
   );
 };
 
-export default VideoPlayer; 
+export default VideoPlayer;

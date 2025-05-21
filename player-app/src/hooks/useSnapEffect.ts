@@ -1,14 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect,useRef, useState } from "react";
 
-interface Snap {
-  count: number;
-  id: number;
-  timestamp: number;
-  x: number;
-  y: number;
-  rotate: number;
-  color: string;
-}
+import { Snap } from "@/components/SnapButton";
 
 export const useSnapEffect = () => {
   const [snapCount, setSnapCount] = useState(0);
@@ -223,14 +215,11 @@ export const useSnapEffect = () => {
   };
 
   // Handle a single snap click
-  const handleSnapClick = (e: React.SyntheticEvent) => {
+  const handleSnapClick = () => {
     // Only process clicks that aren't part of a hold action
     if (isHoldingRef.current) {
       return;
     }
-
-    // Stop propagation to prevent profile popup
-    e.stopPropagation();
 
     // Always hide the undo button immediately on any new press
     hideUndoButton();
@@ -407,12 +396,7 @@ export const useSnapEffect = () => {
   };
 
   // Stop continuous snapping
-  const stopContinuousSnap = (e: React.SyntheticEvent) => {
-    // If e exists, stop propagation to prevent profile popup
-    if (e) {
-      e.stopPropagation();
-    }
-
+  const stopContinuousSnap = () => {
     if (snapIntervalRef.current) {
       // Cancel the animation frame
       cancelAnimationFrame(snapIntervalRef.current);
@@ -440,13 +424,7 @@ export const useSnapEffect = () => {
   };
 
   // Handle undoing a snap
-  const handleUndoSnap = (e: React.SyntheticEvent) => {
-    // Stop propagation to prevent profile popup
-    e.stopPropagation();
-
-    // Prevent default browser behavior (dragging the image)
-    e.preventDefault();
-
+  const handleUndoSnap = () => {
     // Reset the snap count to 0
     setSnapCount(0);
     currentSnapCountRef.current = 0;

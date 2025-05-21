@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import styles from '../styles/VideoPlayer.module.css';
+import { useEffect, useRef, useState } from "react";
+
+import styles from "../styles/VideoPlayer.module.css";
 
 // Example chat messages for demonstration
 const EXAMPLE_MESSAGES = [
@@ -18,26 +19,40 @@ const EXAMPLE_MESSAGES = [
   "Can't stop watching!",
 ];
 
-const Chat = ({ onClose, username }) => {
-  const [chatMessages, setChatMessages] = useState([]);
-  const chatIntervalRef = useRef(null);
-  const chatExitTimeoutRef = useRef(null);
+interface ChatProps {
+  onClose: () => void;
+}
+
+interface ChatMessage {
+  text: string;
+  isUser: boolean;
+  position: number;
+  id: number;
+  exiting?: boolean;
+}
+
+export const Chat: React.FC<ChatProps> = ({ onClose }) => {
+  const chatIntervalRef = useRef<NodeJS.Timeout>(null);
+  const chatExitTimeoutRef = useRef<NodeJS.Timeout>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
   const [chatInput, setChatInput] = useState("");
   const [sendCount, setSendCount] = useState(0);
-  const chatInputRef = useRef(null);
 
   // Focus the chat input when the component mounts
   useEffect(() => {
     if (chatInputRef.current) {
       // Short delay to ensure the input is rendered
       setTimeout(() => {
-        chatInputRef.current.focus();
+        chatInputRef.current?.focus();
       }, 100);
     }
-    
+
     // Start displaying messages
     startChatMessages();
-    
+
     // Clean up on unmount
     return () => {
       stopChatMessages();
@@ -49,7 +64,9 @@ const Chat = ({ onClose, username }) => {
 
   // Function to get a random message from the example list
   const getRandomMessage = () => {
-    return EXAMPLE_MESSAGES[Math.floor(Math.random() * EXAMPLE_MESSAGES.length)];
+    return EXAMPLE_MESSAGES[
+      Math.floor(Math.random() * EXAMPLE_MESSAGES.length)
+    ];
   };
 
   // Start displaying chat messages
@@ -59,10 +76,10 @@ const Chat = ({ onClose, username }) => {
     if (chatIntervalRef.current) {
       clearInterval(chatIntervalRef.current);
     }
-    
+
     // Add first message immediately
     addChatMessage();
-    
+
     // Wait for the first message to get to the top position
     // before setting up the regular interval
     setTimeout(() => {
@@ -82,25 +99,25 @@ const Chat = ({ onClose, username }) => {
   };
 
   // Handle chat input change
-  const handleChatInputChange = (e) => {
+  const handleChatInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setChatInput(e.target.value);
   };
 
   // Handle sending a chat message
-  const handleSendMessage = (e) => {
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!chatInput.trim()) return; // Don't send empty messages
-    
+
     // Increment the send counter
-    setSendCount(prev => prev + 1);
-    
+    setSendCount((prev) => prev + 1);
+
     // Add the user's message to chat
     addUserMessage(chatInput.trim());
-    
+
     // Clear the input
     setChatInput("");
-    
+
     // Focus the input field again
     if (chatInputRef.current) {
       chatInputRef.current.focus();
@@ -108,52 +125,49 @@ const Chat = ({ onClose, username }) => {
   };
 
   // Add a user message to the chat
-  const addUserMessage = (text) => {
+  const addUserMessage = (text: string) => {
     const userMessage = {
       text,
       isUser: true,
       position: 0,
-      id: Date.now() + Math.random()
+      id: Date.now() + Math.random(),
     };
-    
-    setChatMessages(prevMessages => {
+
+    setChatMessages((prevMessages) => {
       let newMessages = [...prevMessages];
-      
+
       // If we already have 6 messages, handle normally
       if (newMessages.length >= 6) {
         // Normal handling for when queue is full
         const exitingMessage = {
           ...newMessages[5],
           exiting: true,
-          id: Date.now() + Math.random()
+          id: Date.now() + Math.random(),
         };
-        
+
         newMessages.splice(5, 1, exitingMessage);
-        
+
         if (chatExitTimeoutRef.current) {
           clearTimeout(chatExitTimeoutRef.current);
         }
-        
+
         chatExitTimeoutRef.current = setTimeout(() => {
-          setChatMessages(messages => 
-            messages.filter(msg => msg.id !== exitingMessage.id)
+          setChatMessages((messages) =>
+            messages.filter((msg) => msg.id !== exitingMessage.id)
           );
         }, 2500);
-        
-        newMessages = [
-          userMessage,
-          ...newMessages.slice(0, 5)
-        ];
-      } 
+
+        newMessages = [userMessage, ...newMessages.slice(0, 5)];
+      }
       // If there are no messages, create backfill and animate to position 5
       else if (newMessages.length === 0) {
         // Backfill the queue with placeholder messages that start at position 5
         const backfill = [];
-        
+
         // Add the user message at position 5 (top)
         userMessage.position = 5;
         backfill.push(userMessage);
-        
+
         // Now animate this message to position 5 directly
         return backfill;
       }
@@ -162,13 +176,13 @@ const Chat = ({ onClose, username }) => {
         // Add the new message
         newMessages = [userMessage, ...newMessages];
       }
-      
+
       // Update positions for all messages
       newMessages = newMessages.map((msg, index) => ({
         ...msg,
-        position: index
+        position: index,
       }));
-      
+
       return newMessages;
     });
   };
@@ -176,54 +190,54 @@ const Chat = ({ onClose, username }) => {
   // Add a new automated chat message and handle position changes
   const addChatMessage = () => {
     const newMessage = getRandomMessage();
-    
-    setChatMessages(prevMessages => {
+
+    setChatMessages((prevMessages) => {
       let newMessages = [...prevMessages];
-      
+
       // If we already have 6 messages, handle normally
       if (newMessages.length >= 6) {
         // Normal handling for when queue is full
         const exitingMessage = {
           ...newMessages[5],
           exiting: true,
-          id: Date.now() + Math.random()
+          id: Date.now() + Math.random(),
         };
-        
+
         newMessages.splice(5, 1, exitingMessage);
-        
+
         if (chatExitTimeoutRef.current) {
           clearTimeout(chatExitTimeoutRef.current);
         }
-        
+
         chatExitTimeoutRef.current = setTimeout(() => {
-          setChatMessages(messages => 
-            messages.filter(msg => msg.id !== exitingMessage.id)
+          setChatMessages((messages) =>
+            messages.filter((msg) => msg.id !== exitingMessage.id)
           );
         }, 2500);
-        
+
         newMessages = [
           {
             text: newMessage,
             isUser: false,
             position: 0,
-            id: Date.now() + Math.random()
+            id: Date.now() + Math.random(),
           },
-          ...newMessages.slice(0, 5)
+          ...newMessages.slice(0, 5),
         ];
-      } 
+      }
       // If there are no messages, create backfill and animate to position 5
       else if (newMessages.length === 0) {
         // Backfill the queue with placeholder messages that start at position 5
         const backfill = [];
-        
+
         // Add the automated message at position 5 (top)
         backfill.push({
           text: newMessage,
           isUser: false,
           position: 5,
-          id: Date.now() + Math.random()
+          id: Date.now() + Math.random(),
         });
-        
+
         // Now animate this message to position 5 directly
         return backfill;
       }
@@ -235,39 +249,43 @@ const Chat = ({ onClose, username }) => {
             text: newMessage,
             isUser: false,
             position: 0,
-            id: Date.now() + Math.random()
+            id: Date.now() + Math.random(),
           },
-          ...newMessages
+          ...newMessages,
         ];
       }
-      
+
       // Update positions for all messages
       newMessages = newMessages.map((msg, index) => ({
         ...msg,
-        position: index
+        position: index,
       }));
-      
+
       return newMessages;
     });
   };
 
   return (
-    <div 
-      className={styles.chatOverlay} 
-      onClick={onClose}
-    >
-      <div className={styles.chatMessagesContainer} onClick={e => e.stopPropagation()}>
-        {chatMessages.map(message => (
-          <div 
+    <div className={styles.chatOverlay} onClick={onClose}>
+      <div
+        className={styles.chatMessagesContainer}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {chatMessages.map((message) => (
+          <div
             key={message.id}
-            className={`${styles.chatMessage} ${styles[`position${message.position}`]} ${message.exiting ? styles.exit : ''} ${message.isUser ? styles.userMessage : ''}`}
+            className={`${styles.chatMessage} ${styles[`position${message.position}`]} ${message.exiting ? styles.exit : ""} ${message.isUser ? styles.userMessage : ""}`}
           >
             {message.text}
           </div>
         ))}
       </div>
-      
-      <form className={styles.chatInputArea} onSubmit={handleSendMessage} onClick={e => e.stopPropagation()}>
+
+      <form
+        className={styles.chatInputArea}
+        onSubmit={handleSendMessage}
+        onClick={(e) => e.stopPropagation()}
+      >
         <input
           type="text"
           className={styles.chatInput}
@@ -288,5 +306,3 @@ const Chat = ({ onClose, username }) => {
     </div>
   );
 };
-
-export default Chat; 

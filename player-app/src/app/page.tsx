@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+import StreamFeed from "@/components/StreamFeed";
+
 export const metadata: Metadata = {
   title: "Stream Feed",
   description: "TikTok-style Stream Feed",
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-async function fetchAvailableStreams() {
+async function fetchAvailableStreams(): Promise<string[]> {
   // Simulate an API call to fetch available streams
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -25,8 +27,5 @@ async function fetchAvailableStreams() {
 export default async function Home() {
   const streams = await fetchAvailableStreams();
 
-  console.log("FETCHED", streams);
-
-  return <div>Stream Feed Here</div>;
-  // return <StreamFeed streams={streams} />;
+  return <StreamFeed streams={streams} />;
 }

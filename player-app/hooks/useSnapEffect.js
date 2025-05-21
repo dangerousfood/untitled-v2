@@ -516,11 +516,11 @@ const useSnapEffect = () => {
 
   return {
     snapCount,
-    snaps,
+    snaps: snaps || [],
     lastSnap,
     showUndoButton,
-    undoButtonStyle,
-    isAutoResetting: isAutoResettingRef.current,
+    undoButtonStyle: undoButtonStyle || {},
+    isAutoResetting: isAutoResettingRef.current || false,
     handleSnapClick,
     startContinuousSnap,
     stopContinuousSnap,

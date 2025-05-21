@@ -1,6 +1,54 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from '../styles/VideoPlayer.module.css';
 
+// Fixed styles for consistent sizing
+const containerStyle = {
+  position: 'fixed',
+  bottom: '120px',
+  right: '20px',
+  width: '81px',
+  height: '200px',
+  zIndex: 1000,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  pointerEvents: 'auto'
+};
+
+const buttonWrapperStyle = {
+  position: 'relative',
+  width: '81px',
+  height: '81px',
+  zIndex: 10
+};
+
+const snapButtonStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '81px',
+  height: '81px',
+  borderRadius: '50%',
+  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  color: 'white',
+  border: '2px solid rgba(255, 255, 255, 0.4)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  padding: 0,
+  outline: 'none',
+  overflow: 'hidden',
+  zIndex: 15
+};
+
+const snapButtonImgStyle = {
+  width: '54px',
+  height: '54px',
+  objectFit: 'contain'
+};
+
 const SnapButton = ({ 
   onSnap, 
   onContinuousSnap, 
@@ -20,9 +68,10 @@ const SnapButton = ({
       className={styles.snapButtonContainer} 
       ref={snapButtonRef}
       onMouseLeave={onStopContinuousSnap}
+      style={containerStyle}
     >
       {/* Regular animated snaps */}
-      {snapNumbers.filter(snap => {
+      {Array.isArray(snapNumbers) ? snapNumbers.filter(snap => {
         // During auto-reset, show all snaps as animated
         if (isAutoResetting) {
           return true;
@@ -42,7 +91,7 @@ const SnapButton = ({
         >
           +{snap.count}
         </div>
-      ))}
+      )) : null}
       
       {/* Last snap shown without animation - only if not in auto-reset */}
       {lastSnap && !isAutoResetting && (
@@ -64,6 +113,7 @@ const SnapButton = ({
       <div 
         className={styles.buttonWrapper}
         onMouseLeave={onStopContinuousSnap}
+        style={buttonWrapperStyle}
       >
         <button 
           className={styles.snapButton}
@@ -74,8 +124,9 @@ const SnapButton = ({
           onMouseLeave={onStopContinuousSnap}
           onClick={onSnap}
           title="Snap!"
+          style={snapButtonStyle}
         >
-          <img src="/snap-hand.svg" alt="Snap" />
+          <img src="/snap-hand.svg" alt="Snap" style={snapButtonImgStyle} />
         </button>
         
         {showUndoButton && (
@@ -83,9 +134,34 @@ const SnapButton = ({
             className={styles.undoButton} 
             onClick={onUndoSnap}
             title="Undo last snap"
-            style={undoButtonStyle}
+            style={{
+              ...undoButtonStyle,
+              position: 'absolute',
+              top: '90px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '54px',
+              height: '54px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              color: 'white',
+              border: '2px solid rgba(255, 255, 255, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9,
+              padding: 0
+            }}
           >
-            <img src="/undo-icon.svg" alt="Undo" />
+            <img 
+              src="/undo-icon.svg" 
+              alt="Undo" 
+              style={{
+                width: '27px',
+                height: '27px',
+                objectFit: 'contain'
+              }}
+            />
           </button>
         )}
       </div>

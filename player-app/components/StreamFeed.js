@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import VideoPlayer from './VideoPlayer';
+import ControlsOverlay from './ControlsOverlay';
+import SnapButton from './SnapButton';
+import ChatButton from './ChatButton';
+import MuteButton from './MuteButton';
+import useSnapEffect from '../hooks/useSnapEffect';
 import styles from '../styles/StreamFeed.module.css';
 
 const StreamFeed = ({ streams = ['stream1', 'stream2', 'stream3'] }) => {
@@ -11,6 +16,35 @@ const StreamFeed = ({ streams = ['stream1', 'stream2', 'stream3'] }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const scrollTimeoutRef = useRef(null);
   const lastScrollTime = useRef(0);
+  const [isMuted, setIsMuted] = useState(true);
+  const [showMuteButton, setShowMuteButton] = useState(true);
+
+  // Use snap effect hook directly
+  const snapEffectProps = useSnapEffect() || {};
+  
+  // Add safety checks for snapEffectProps properties
+  const safeSnapProps = {
+    handleSnapClick: snapEffectProps.handleSnapClick || (() => {}),
+    startContinuousSnap: snapEffectProps.startContinuousSnap || (() => {}),
+    stopContinuousSnap: snapEffectProps.stopContinuousSnap || (() => {}),
+    snapCount: snapEffectProps.snapCount || 0,
+    snaps: snapEffectProps.snaps || [],
+    lastSnap: snapEffectProps.lastSnap || null,
+    isAutoResetting: snapEffectProps.isAutoResetting || false,
+    handleUndoSnap: snapEffectProps.handleUndoSnap || (() => {}),
+    showUndoButton: snapEffectProps.showUndoButton || false,
+    undoButtonStyle: snapEffectProps.undoButtonStyle || {}
+  };
+
+  // Get current stream details
+  const currentStreamKey = streams[currentIndex];
+  const username = `@${currentStreamKey.replace(/[0-9]/g, '')}Streamer`;
+  const profilePic = `https://i.pravatar.cc/150?u=${currentStreamKey}`;
+
+  // Handle mute button toggle
+  const handleMuteChange = (newMutedState) => {
+    setIsMuted(newMutedState);
+  };
 
   // Determine which streams should be rendered to prevent freezing during transitions
   const getVisibleStreams = () => {
@@ -53,20 +87,26 @@ const StreamFeed = ({ streams = ['stream1', 'stream2', 'stream3'] }) => {
 
   const handleTouchStart = (e) => {
     if (isTransitioning) return;
+    // Skip if the touch is on a fixed overlay element
+    if (e.target.closest('[data-fixed-overlay="true"], [data-ui-element="true"]')) return;
     touchStartY.current = e.touches[0].clientY;
     swipeInProgress.current = true;
   };
 
   const handleTouchMove = (e) => {
     if (!swipeInProgress.current || isTransitioning) return;
+    // Skip if the touch is on a fixed overlay element
+    if (e.target.closest('[data-fixed-overlay="true"], [data-ui-element="true"]')) return;
     touchEndY.current = e.touches[0].clientY;
     
     // Prevent default to stop browser scroll
     e.preventDefault();
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
     if (!swipeInProgress.current || isTransitioning) return;
+    // Skip if the touch is on a fixed overlay element
+    if (e.target.closest('[data-fixed-overlay="true"], [data-ui-element="true"]')) return;
     
     // Minimum swipe distance required (px)
     const minSwipeDistance = 50;
@@ -94,6 +134,9 @@ const StreamFeed = ({ streams = ['stream1', 'stream2', 'stream3'] }) => {
   const handleWheel = (e) => {
     // Return early if we're already transitioning
     if (isTransitioning) return;
+    
+    // Skip if the wheel event is on a fixed overlay element
+    if (e.target.closest('[data-fixed-overlay="true"], [data-ui-element="true"]')) return;
     
     // Prevent default to stop browser scroll
     e.preventDefault();
@@ -148,69 +191,150 @@ const StreamFeed = ({ streams = ['stream1', 'stream2', 'stream3'] }) => {
   // Get which streams should be visible
   const visibleIndexes = getVisibleStreams();
 
+  console.log('StreamFeed rendering, current user:', username, 'profile pic:', profilePic);
+
   return (
-    <div 
-      className={styles.feedContainer}
-      ref={feedRef}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onWheel={handleWheel}
-    >
+    <>
       <div 
-        className={styles.feedSlider}
-        style={{ transform: `translateY(-${currentIndex * 100}%)` }}
+        className={styles.feedContainer}
+        ref={feedRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
       >
-        {streams.map((streamKey, index) => {
-          // Determine if this stream should be rendered
-          const shouldRender = visibleIndexes.includes(index);
-          
-          // Only the current stream should be active (unmuted)
-          const isActive = index === currentIndex;
-          
-          return (
-            <div key={streamKey} className={styles.feedItem}>
-              {shouldRender && (
-                <>
+        <div 
+          className={styles.feedSlider}
+          style={{ transform: `translateY(-${currentIndex * 100}%)` }}
+        >
+          {streams.map((streamKey, index) => {
+            // Determine if this stream should be rendered
+            const shouldRender = visibleIndexes.includes(index);
+            
+            // Only the current stream should be active (unmuted)
+            const isActive = index === currentIndex;
+            
+            return (
+              <div key={streamKey} className={styles.feedItem}>
+                {shouldRender && (
                   <VideoPlayer 
                     streamKey={streamKey} 
-                    isActive={isActive} 
+                    isActive={isActive}
+                    isMuted={isMuted}
+                    onlyVideoElement={true} // Signal that this should only render video, not controls
                   />
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      
-      <div className={styles.navigation}>
-        <div 
-          className={`${styles.navArrow} ${styles.navUp}`}
-          onClick={() => {
-            if (!isTransitioning) {
-              setIsTransitioning(true);
-              goToPrevStream();
-              setTimeout(() => setIsTransitioning(false), 500);
-            }
-          }}
-        >
-          ▲
+                )}
+              </div>
+            );
+          })}
         </div>
         
-        <div 
-          className={`${styles.navArrow} ${styles.navDown}`}
-          onClick={() => {
-            if (!isTransitioning) {
-              setIsTransitioning(true);
-              goToNextStream();
-              setTimeout(() => setIsTransitioning(false), 500);
-            }
-          }}
-        >
-          ▼
+        <div className={styles.navigation}>
+          <div 
+            className={`${styles.navArrow} ${styles.navUp}`}
+            onClick={() => {
+              if (!isTransitioning) {
+                setIsTransitioning(true);
+                goToPrevStream();
+                setTimeout(() => setIsTransitioning(false), 500);
+              }
+            }}
+          >
+            ▲
+          </div>
+          
+          <div 
+            className={`${styles.navArrow} ${styles.navDown}`}
+            onClick={() => {
+              if (!isTransitioning) {
+                setIsTransitioning(true);
+                goToNextStream();
+                setTimeout(() => setIsTransitioning(false), 500);
+              }
+            }}
+          >
+            ▼
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Fixed overlay for profile and chat */}
+      <ControlsOverlay 
+        username={username}
+        profilePic={profilePic}
+        isMuted={isMuted}
+        onMuteChange={handleMuteChange}
+        activeStreamKey={currentStreamKey}
+        key={currentIndex}
+      />
+
+      {/* Fixed controls */}
+      <div 
+        data-ui-element="true" 
+        style={{
+          position: 'fixed',
+          bottom: '120px',
+          right: '20px',
+          zIndex: 1000,
+          pointerEvents: 'auto'
+        }}
+      >
+        <SnapButton
+          onSnap={safeSnapProps.handleSnapClick}
+          onContinuousSnap={safeSnapProps.startContinuousSnap}
+          onStopContinuousSnap={safeSnapProps.stopContinuousSnap}
+          snapCount={safeSnapProps.snapCount}
+          snapNumbers={safeSnapProps.snaps}
+          lastSnap={safeSnapProps.lastSnap}
+          isAutoResetting={safeSnapProps.isAutoResetting}
+          onUndoSnap={safeSnapProps.handleUndoSnap}
+          showUndoButton={safeSnapProps.showUndoButton}
+          undoButtonStyle={safeSnapProps.undoButtonStyle}
+        />
+      </div>
+
+      <div 
+        data-ui-element="true" 
+        style={{
+          position: 'fixed',
+          bottom: '120px',
+          right: '110px',
+          zIndex: 1000,
+          pointerEvents: 'auto'
+        }}
+      >
+        <ChatButton
+          isVisible={true}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            // Show chat in the overlay by triggering a custom event
+            const customEvent = new CustomEvent('toggleChatRequest');
+            document.dispatchEvent(customEvent);
+          }}
+        />
+      </div>
+
+      <div
+        data-ui-element="true"
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 1000,
+          pointerEvents: 'auto'
+        }}
+      >
+        <MuteButton
+          isMuted={isMuted}
+          isVisible={true}
+          onToggleMute={(e) => {
+            e.stopPropagation();
+            handleMuteChange(!isMuted);
+          }}
+        />
+      </div>
+    </>
   );
 };
 

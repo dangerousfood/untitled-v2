@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import StreamFeed from '../components/StreamFeed';
+import styles from '../styles/Home.module.css';
 
 export default function Home() {
   const [streams, setStreams] = useState(['stream1', 'stream1', 'stream1']);
@@ -44,59 +45,18 @@ export default function Home() {
       </Head>
 
       {loading ? (
-        <div className="loadingContainer">
-          <div className="loadingSpinner"></div>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingSpinner}></div>
           <p>Loading streams...</p>
         </div>
       ) : error ? (
-        <div className="errorContainer">
+        <div className={styles.errorContainer}>
           <p>{error}</p>
           <button onClick={() => window.location.reload()}>Retry</button>
         </div>
       ) : (
         <StreamFeed streams={streams} />
       )}
-
-      <style jsx>{`
-        .loadingContainer, .errorContainer {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          background-color: #000;
-          color: white;
-        }
-        
-        .loadingSpinner {
-          border: 4px solid rgba(255, 255, 255, 0.3);
-          border-top: 4px solid white;
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          animation: spin 1s linear infinite;
-          margin-bottom: 20px;
-        }
-        
-        .errorContainer button {
-          margin-top: 20px;
-          padding: 8px 16px;
-          background-color: #333;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-        }
-        
-        .errorContainer button:hover {
-          background-color: #444;
-        }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </>
   );
 } 
